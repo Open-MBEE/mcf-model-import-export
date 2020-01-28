@@ -1,0 +1,8 @@
+{
+    "name": "model-export",
+    "version": "1.0.0",
+    "description": "A plugin for exporting models",
+    "main": "index.js",
+    "author": "Donte McDaniel (donte.s.mcdaniel@lmco.com)",
+    "license": "ISC"
+}
