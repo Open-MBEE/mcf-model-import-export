@@ -1,0 +1,110 @@
+<h1>Export</h1>
+
+<select id="organizations">
+    <option>Select Organization</option>
+    <% orgs.forEach(function(org){ %>
+    <option value="<%= org._id %>"><%= org._id %></option>
+    <% }) %>
+</select>
+
+<select id="projects" disabled>
+    <option>Select Project</option>
+</select>
+
+<select id="branches" disabled>
+    <option>Select Branch</option>
+</select>
+
+<script id="template-project-select-export" type="text/template">
+    <option value="{{project}}">{{project}}</option>
+</script>
+
+<script id="template-branch-select-export" type="text/template">
+    <option value="{{branch}}">{{branch}}</option>
+</script>
+
+<button id="exportBtn">Export</button>
+
+<h1>Import</h1>
+
+<script>
+    let organizationsElement = document.getElementById('organizations');
+    let projectsElement = document.getElementById('projects');
+    let exportBtn = document.getElementById('exportBtn');
+
+    // Event listener for organizations select element
+    organizationsElement.addEventListener('change', (e) => {
+        getProjects(e.target.value).then(projects => {
+            // Cache of the template
+            let template = document.getElementById("template-project-select-export");
+            // Get the contents of the template
+            let templateHtml = template.innerHTML;
+            // Final HTML variable as empty string
+            let listHtml = "";
+            listHtml += '<option>Select Project</option>';
+            // Loop through projects, replace placeholder tags with actual data, and generate final HTML
+            for (var key in projects) {
+                let parsedId = projects[key]["_id"].split(':');
+                listHtml += templateHtml.replace(/{{project}}/g, parsedId[1]);
+            }
+            // Replace the HTML of #projects with final HTML and enable it
+            document.getElementById("projects").innerHTML = listHtml;
+            document.getElementById("projects").disabled = false;
+        });
+    });
+
+    // Event listener for projects select element
+    projectsElement.addEventListener('change', (e) => {
+        getBranches(document.getElementById('organizations').value, e.target.value).then(branches => {
+            // Cache of the template
+            let template = document.getElementById("template-branch-select-export");
+            // Get the contents of the template
+            let templateHtml = template.innerHTML;
+            // Final HTML variable as empty string
+            let listHtml = "";
+            listHtml += '<option>Select Branch</option>';
+            // Loop through branches, replace placeholder tags with actual data, and generate final HTML
+            for (var key in branches) {
+                let parsedId = branches[key]["_id"].split(':');
+                listHtml += templateHtml.replace(/{{branch}}/g, parsedId[2]);
+            }
+            // Replace the HTML of #branches with final HTML and enable it
+            document.getElementById("branches").innerHTML = listHtml;
+            document.getElementById("branches").disabled = false;
+        });
+    });
+
+    exportBtn.addEventListener('click', () => {
+        let organization = document.getElementById('organizations').value;
+        let project = document.getElementById('projects').value;
+        let branch = document.getElementById('branches').value;
+        exportModel(organization, project, branch).then(exportedData => {
+            console.log(exportedData);
+            // TODO: Download exportedData to clients machine
+        });
+    });
+
+    /**
+     * Gets all the projects for a given organization
+     */
+    async function getProjects(organization) {
+        const response = await fetch('/plugins/model-export/projects', {method: 'POST', body: JSON.stringify({organization})});
+        return await response.json();
+    }
+
+    /**
+     * Gets all the branches for a given organization and project
+     */
+    async function getBranches(organization, project) {
+        const response = await fetch('/plugins/model-export/branches', {method: 'POST', body: JSON.stringify({organization, project})});
+        return await response.json();
+    }
+
+    /**
+     * Gets exported data for a particular project
+     */
+     async function exportModel(organization, project, branch) {
+        const response = await fetch('/plugins/model-export/export', {method: 'POST', body: JSON.stringify({organization, project, branch})});
+        return await response.json();
+    }
+</script>
