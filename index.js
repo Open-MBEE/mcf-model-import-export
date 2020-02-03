@@ -13,6 +13,7 @@ const branchController = M.require('controllers.branch-controller');
 const elementController = M.require('controllers.element-controller');
 const utils = M.require('lib.utils');
 
+// Initializing Globals
 let orgs;
 let projects;
 let branches;
@@ -20,6 +21,7 @@ let branches;
 app.use(expressLayouts);
 app.set('views', __dirname + '/views')
 app.set('view engine', 'ejs');
+app.use(express.static(__dirname + '/public'));
 
 // Defining the main route
 app.get('/', authenticate, (req, res) => {
@@ -52,6 +54,13 @@ app.post('/export', authenticate, async (req, res) => {
     let model = await elementController.find(req.user, body.organization, body.project, body.branch);
     let updatedModel = removeReferences(model);
     res.send(updatedModel);
+});
+
+// POST route for import
+app.post('/import', authenticate, async (req, res) => {
+    let body = JSON.parse(req.body);
+    console.log(body);
+    // TODO: Import the model into the database
 });
 
 /**
@@ -105,6 +114,81 @@ function removeReferences(model) {
         // target property
         if (model[i].target) {
             model[i].target = model[i].target.split(':')[model[i].target.split(':').length - 1];
+        }
+        // targetOf property
+        if (model[i].targetOf) {
+            model[i].targetOf.forEach(target => {
+                target._id = target._id.split(':')[target._id.split(':').length - 1];
+                // parent property
+                if (target.parent) {
+                    target.parent = target.parent.split(':')[target.parent.split(':').length - 1];
+                }
+                // source property
+                if (target.source) {
+                    target.source = target.source.split(':')[target.source.split(':').length - 1];
+                }
+                // target property
+                if (target.target) {
+                    target.target = target.target.split(':')[target.target.split(':').length - 1];
+                }
+                delete target.project;
+                delete target.branch;
+                delete target.createdBy;
+                delete target.lastModifiedBy;
+                delete target.updatedOn;
+                delete target.archivedOn;
+                delete target.archived;
+            });
+        }
+        // contains property
+        if (model[i].contains) {
+            model[i].contains.forEach(c => {
+                c._id = c._id.split(':')[c._id.split(':').length - 1];
+                // parent property
+                if (c.parent) {
+                    c.parent = c.parent.split(':')[c.parent.split(':').length - 1];
+                }
+                // source property
+                if (c.source) {
+                    c.source = c.source.split(':')[c.source.split(':').length - 1];
+                }
+                // target property
+                if (c.target) {
+                    c.target = c.target.split(':')[c.target.split(':').length - 1];
+                }
+                delete c.project;
+                delete c.branch;
+                delete c.createdBy;
+                delete c.lastModifiedBy;
+                delete c.updatedOn;
+                delete c.archivedOn;
+                delete c.archived;
+            });
+        }
+        // sourceOf property
+        if (model[i].sourceOf) {
+            model[i].sourceOf.forEach(source => {
+                source._id = source._id.split(':')[source._id.split(':').length - 1];
+                // parent property
+                if (source.parent) {
+                    source.parent = source.parent.split(':')[source.parent.split(':').length - 1];
+                }
+                // source property
+                if (source.source) {
+                    source.source = source.source.split(':')[source.source.split(':').length - 1];
+                }
+                // target property
+                if (source.target) {
+                    source.target = source.target.split(':')[source.target.split(':').length - 1];
+                }
+                delete source.project;
+                delete source.branch;
+                delete source.createdBy;
+                delete source.lastModifiedBy;
+                delete source.updatedOn;
+                delete source.archivedOn;
+                delete source.archived;
+            });
         }
         delete model[i].project;
         delete model[i].branch;

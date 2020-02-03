@@ -1,17 +1,17 @@
-<h1>Export</h1>
+<h3 class="section-header">Export</h3>
 
-<select id="organizations">
+<select id="organizations-export">
     <option>Select Organization</option>
     <% orgs.forEach(function(org){ %>
     <option value="<%= org._id %>"><%= org._id %></option>
     <% }) %>
 </select>
 
-<select id="projects" disabled>
+<select id="projects-export" disabled>
     <option>Select Project</option>
 </select>
 
-<select id="branches" disabled>
+<select id="branches-export" disabled>
     <option>Select Branch</option>
 </select>
 
@@ -25,15 +25,67 @@
 
 <button id="exportBtn">Export</button>
 
-<h1>Import</h1>
+<h3 class="section-header">Import</h3>
+
+<input type="file" id="selectFiles" value="Import" /><br />
+
+<select id="organizations-import">
+    <option>Select Organization</option>
+    <% orgs.forEach(function(org){ %>
+    <option value="<%= org._id %>"><%= org._id %></option>
+    <% }) %>
+</select>
+
+<select id="projects-import" disabled>
+    <option>Select Project</option>
+</select>
+
+<select id="branches-import" disabled>
+    <option>Select Branch</option>
+</select>
+
+<script id="template-project-select-import" type="text/template">
+    <option value="{{project}}">{{project}}</option>
+</script>
+
+<script id="template-branch-select-import" type="text/template">
+    <option value="{{branch}}">{{branch}}</option>
+</script>
+
+<button id="importBtn">Import</button>
 
 <script>
-    let organizationsElement = document.getElementById('organizations');
-    let projectsElement = document.getElementById('projects');
+    let organizationsExportElement = document.getElementById('organizations-export');
+    let projectsExportElement = document.getElementById('projects-export');
     let exportBtn = document.getElementById('exportBtn');
+    let importBtn = document.getElementById('importBtn');
+    let organizationsImportElement = document.getElementById('organizations-import');
+    let projectsImportElement = document.getElementById('projects-import');
+    let branchesImportElement = document.getElementById('branches-import');
 
-    // Event listener for organizations select element
-    organizationsElement.addEventListener('change', (e) => {
+    // Event listener for organizations-import select element
+    organizationsImportElement.addEventListener('change', (e) => {
+        getProjects(e.target.value).then(projects => {
+            // Cache of the template
+            let template = document.getElementById('template-project-select-import');
+            // Get the contents of the template
+            let templateHtml = template.innerHTML;
+            // Final HTML variable as empty string
+            let listHtml = "";
+            listHtml += '<option>Select Project</option>';
+            // Loop through projects, replace placeholder tags with actual data, and generate final HTML
+            for (var key in projects) {
+                let parsedId = projects[key]["_id"].split(':');
+                listHtml += templateHtml.replace(/{{project}}/g, parsedId[1]);
+            }
+            // Replace the HTML of #projects-export with final HTML and enable it
+            document.getElementById("projects-import").innerHTML = listHtml;
+            document.getElementById("projects-import").disabled = false;
+        });
+    });
+
+    // Event listener for organizations-export select element
+    organizationsExportElement.addEventListener('change', (e) => {
         getProjects(e.target.value).then(projects => {
             // Cache of the template
             let template = document.getElementById("template-project-select-export");
@@ -47,15 +99,36 @@
                 let parsedId = projects[key]["_id"].split(':');
                 listHtml += templateHtml.replace(/{{project}}/g, parsedId[1]);
             }
-            // Replace the HTML of #projects with final HTML and enable it
-            document.getElementById("projects").innerHTML = listHtml;
-            document.getElementById("projects").disabled = false;
+            // Replace the HTML of #projects-export with final HTML and enable it
+            document.getElementById("projects-export").innerHTML = listHtml;
+            document.getElementById("projects-export").disabled = false;
         });
     });
 
-    // Event listener for projects select element
-    projectsElement.addEventListener('change', (e) => {
-        getBranches(document.getElementById('organizations').value, e.target.value).then(branches => {
+    // Event listener for projects-import select element
+    projectsImportElement.addEventListener('change', (e) => {
+        getBranches(document.getElementById('organizations-import').value, e.target.value).then(branches => {
+            // Cache of the template
+            let template = document.getElementById("template-branch-select-import");
+            // Get the contents of the template
+            let templateHtml = template.innerHTML;
+            // Final HTML variable as empty string
+            let listHtml = "";
+            listHtml += '<option>Select Branch</option>';
+            // Loop through branches, replace placeholder tags with actual data, and generate final HTML
+            for (var key in branches) {
+                let parsedId = branches[key]["_id"].split(':');
+                listHtml += templateHtml.replace(/{{branch}}/g, parsedId[2]);
+            }
+            // Replace the HTML of #branches-export with final HTML and enable it
+            document.getElementById("branches-import").innerHTML = listHtml;
+            document.getElementById("branches-import").disabled = false;
+        });
+    });
+
+    // Event listener for projects-export select element
+    projectsExportElement.addEventListener('change', (e) => {
+        getBranches(document.getElementById('organizations-export').value, e.target.value).then(branches => {
             // Cache of the template
             let template = document.getElementById("template-branch-select-export");
             // Get the contents of the template
@@ -68,20 +141,45 @@
                 let parsedId = branches[key]["_id"].split(':');
                 listHtml += templateHtml.replace(/{{branch}}/g, parsedId[2]);
             }
-            // Replace the HTML of #branches with final HTML and enable it
-            document.getElementById("branches").innerHTML = listHtml;
-            document.getElementById("branches").disabled = false;
+            // Replace the HTML of #branches-export with final HTML and enable it
+            document.getElementById("branches-export").innerHTML = listHtml;
+            document.getElementById("branches-export").disabled = false;
         });
     });
 
+    // Event listener for export button
     exportBtn.addEventListener('click', () => {
-        let organization = document.getElementById('organizations').value;
-        let project = document.getElementById('projects').value;
-        let branch = document.getElementById('branches').value;
+        let organization = document.getElementById('organizations-export').value;
+        let project = document.getElementById('projects-export').value;
+        let branch = document.getElementById('branches-export').value;
         exportModel(organization, project, branch).then(exportedData => {
             console.log(exportedData);
-            // TODO: Download exportedData to clients machine
+            // Start file download.
+            download("model.json", JSON.stringify(exportedData));
         });
+    });
+
+    // Event listener for import button
+    // Handles reading the file
+    importBtn.addEventListener('click', () => {
+        let organization = document.getElementById('organizations-import').value;
+        let project = document.getElementById('projects-import').value;
+        let branch = document.getElementById('branches-import').value;
+        let files = document.getElementById('selectFiles').files;
+        if (files.length <= 0) {
+            return false;
+        }
+        
+        let fr = new FileReader();
+        fr.onload = function(e) {
+            let result = JSON.parse(e.target.result);
+            console.log(result);
+            importModel(result, organization, project, branch).then(response => {
+                console.log(response);
+            });
+        }
+        
+        fr.readAsText(files.item(0));
     });
 
     /**
@@ -106,5 +204,23 @@
      async function exportModel(organization, project, branch) {
         const response = await fetch('/plugins/model-export/export', {method: 'POST', body: JSON.stringify({organization, project, branch})});
         return await response.json();
+    }
+
+    async function importModel(data, organization, project, branch) {
+        const response = await fetch('/plugins/model-export/import', {method: 'POST', body: JSON.stringify({data, organization, project, branch})});
+        return await response.json();
+    }
+    
+    /**
+     * Downloads the exported data to a json file on the clients machine
+     */
+    function download(filename, text) {
+        let element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        element.setAttribute('download', filename);
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
     }
 </script>
