@@ -1,5 +1,5 @@
 {
-    "name": "model-export",
+    "name": "model-import-export",
     "version": "1.0.0",
     "description": "A plugin for exporting models",
     "main": "index.js",
