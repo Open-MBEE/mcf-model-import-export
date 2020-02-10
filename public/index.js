@@ -1,6 +1,9 @@
 'use strict'
 
+// Name of the plugin
 let pluginName = 'model-import-export';
+
+// Declaring ui elements
 let organizationsExportElement = document.getElementById('organizations-export');
 let projectsExportElement = document.getElementById('projects-export');
 let branchesExportElement = document.getElementById('branches-export');
@@ -174,6 +177,8 @@ importBtn.addEventListener('click', () => {
 
 /**
  * Gets all the projects for a given organization
+ * 
+ * @param {String} organization name of the organization
  */
 async function getProjects(organization) {
     const response = await fetch(`/plugins/${pluginName}/projects/organization/${organization}`, {method: 'POST'});
@@ -182,27 +187,50 @@ async function getProjects(organization) {
 
 /**
  * Gets all the branches for a given organization and project
+ * 
+ * @param {String} organization name of the organization
+ * @param {String} project name of the project
  */
 async function getBranches(organization, project) {
     const response = await fetch(`/plugins/${pluginName}/branches/organization/${organization}/project/${project}`, {method: 'POST'});
     return await response.json();
 }
 
-/**
- * Gets exported data for a particular project
+ /**
+ * Gets exported data for a project
+ * 
+ * @param {String} organization name of the organization
+ * @param {String} project name of the project
+ * * @param {String} branch name of the branch
  */
 async function exportModel(organization, project, branch) {
     const response = await fetch(`/plugins/${pluginName}/export/organization/${organization}/project/${project}/branch/${branch}`, {method: 'POST'});
     return await response.json();
 }
 
+
+/**
+ * Imports data into a project
+ * 
+ * @param {Object} data the data model the user wishes to update and or add.
+ * @param {String} organization name of the organization
+ * @param {String} project name of the project
+ * @param {String} branch name of the branch
+ * 
+ */
 async function importModel(data, organization, project, branch) {
     const response = await fetch(`/plugins/${pluginName}/import/organization/${organization}/project/${project}/branch/${branch}`, {method: 'POST', body: JSON.stringify({data})});
     return await response.json();
 }
-    
+
 /**
  * Downloads the exported data to a json file on the clients machine
+ * 
+ * @param {Object} data the data model the user wishes to update and or add.
+ * @param {String} organization name of the organization
+ * @param {String} project name of the project
+ * @param {String} branch name of the branch
+ * 
  */
 function download(filename, text) {
     let element = document.createElement('a');

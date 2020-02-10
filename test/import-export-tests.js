@@ -1,4 +1,5 @@
-// NPM modules
+'use strict';
+
 const chai = require('chai');
 const request = require('request');
 

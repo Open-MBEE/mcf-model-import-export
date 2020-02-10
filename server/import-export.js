@@ -61,11 +61,11 @@ async function importModel(user, data, organization, project, branch) {
             else {
                 // Checking to see if the element exists
                 // If not, create a new element
-                let found = await elementController.find(user, organization, project, branch, data[i].id);
+                let found = await elementController.find(user, organization, project, branch, data[i].id).catch((err) => logger.error(err));
                 if (found.length !== 0) {
                     let nameSpacedElementID = `${organization}:${project}:${branch}:${data[i].id}`;
                     logger.info('Updating '+nameSpacedElementID);
-                    elementController.update(user, organization, project, branch, data[i]);
+                    await elementController.update(user, organization, project, branch, data[i]).catch((err) => logger.error(err));;
                 }
                 else {
                     // Creating new element
