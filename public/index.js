@@ -1,5 +1,6 @@
 'use strict'
 
+let pluginName = 'model-import-export';
 let organizationsExportElement = document.getElementById('organizations-export');
 let projectsExportElement = document.getElementById('projects-export');
 let branchesExportElement = document.getElementById('branches-export');
@@ -134,7 +135,6 @@ exportBtn.addEventListener('click', () => {
 
     if (organization !== 'Select Organization' && project !== 'Select Project' && branch !== 'Select Branch') {
         exportModel(organization, project, branch).then(exportedData => {
-            console.log(exportedData);
             // Start file download.
             download("model.json", JSON.stringify(exportedData));
         });
@@ -176,7 +176,7 @@ importBtn.addEventListener('click', () => {
  * Gets all the projects for a given organization
  */
 async function getProjects(organization) {
-    const response = await fetch('/plugins/model-export/projects', {method: 'POST', body: JSON.stringify({organization})});
+    const response = await fetch(`/plugins/${pluginName}/projects/organization/${organization}`, {method: 'POST'});
     return await response.json();
 }
 
@@ -184,20 +184,20 @@ async function getProjects(organization) {
  * Gets all the branches for a given organization and project
  */
 async function getBranches(organization, project) {
-    const response = await fetch('/plugins/model-export/branches', {method: 'POST', body: JSON.stringify({organization, project})});
+    const response = await fetch(`/plugins/${pluginName}/branches/organization/${organization}/project/${project}`, {method: 'POST'});
     return await response.json();
 }
 
 /**
  * Gets exported data for a particular project
  */
-    async function exportModel(organization, project, branch) {
-    const response = await fetch('/plugins/model-export/export', {method: 'POST', body: JSON.stringify({organization, project, branch})});
+async function exportModel(organization, project, branch) {
+    const response = await fetch(`/plugins/${pluginName}/export/organization/${organization}/project/${project}/branch/${branch}`, {method: 'POST'});
     return await response.json();
 }
 
 async function importModel(data, organization, project, branch) {
-    const response = await fetch('/plugins/model-export/import', {method: 'POST', body: JSON.stringify({data, organization, project, branch})});
+    const response = await fetch(`/plugins/${pluginName}/import/organization/${organization}/project/${project}/branch/${branch}`, {method: 'POST', body: JSON.stringify({data})});
     return await response.json();
 }
     
