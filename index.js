@@ -1,3 +1,19 @@
+/**
+ * @classification UNCLASSIFIED
+ *
+ * @copyright Copyright (C) 2020, Lockheed Martin Corporation
+ *
+ * @license MIT
+ *
+ * @owner Donte McDaniel
+ *
+ * @author Donte McDaniel
+ *
+ * @description Initializes GET and POST routes for retrieving
+ * organization, propject, and branch data. Also sets up routes'
+ * for importing and exporting elements.
+ */
+
 'use strict';
 
 // Require express module

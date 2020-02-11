@@ -1,4 +1,19 @@
-'use strict'
+/**
+ * @classification UNCLASSIFIED
+ *
+ * @copyright Copyright (C) 2020, Lockheed Martin Corporation
+ *
+ * @license MIT
+ *
+ * @owner Donte McDaniel
+ *
+ * @author Donte McDaniel
+ *
+ * @description Sets up eventlisteners for importing and exporting models
+ * It also sends GET and POST requests to get and send data
+ */
+
+ 'use strict';
 
 // Name of the plugin
 let pluginName = 'model-import-export';

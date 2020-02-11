@@ -1,3 +1,18 @@
+/**
+ * @classification UNCLASSIFIED
+ *
+ * @copyright Copyright (C) 2020, Lockheed Martin Corporation
+ *
+ * @license MIT
+ *
+ * @owner Donte McDaniel
+ *
+ * @author Donte McDaniel
+ *
+ * @description This tests the import-export API functionality:
+ * GET and POST for organizations, projects, branches, importing and exporting
+ */
+
 'use strict';
 
 const chai = require('chai');

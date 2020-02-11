@@ -1,10 +1,25 @@
+/**
+ * @classification UNCLASSIFIED
+ *
+ * @module import-export
+ *
+ * @copyright Copyright (C) 2020, Lockheed Martin Corporation
+ *
+ * @license MIT
+ *
+ * @owner Donte McDaniel
+ *
+ * @author Donte McDaniel
+ *
+ * @description Contains the logic to import and export an elements
+ */
+
 'use strict';
 
 const elementController = M.require('controllers.element-controller');
 const getPublicData = M.require('lib.get-public-data');
-const log = M.require('lib.logger');
-const logger = log.makeLogger('start'); // Creating a logger
 const errors = M.require('lib.errors');
+const utils = M.require('lib.utils');
 
 // Export/Exposing functions
 module.exports = {
@@ -23,60 +38,61 @@ module.exports = {
  */
 async function importModel(user, data, organization, project, branch) {
     try {
-        // Looping through each element in the imported data array
-        for (let i = 0; i < data.length; i++) {
+        // Getting all Ids for each element in the data array
+        let elementsToCreate = [];
+        let elementsToUpdate = [];
+        let elementsToIndividuallyUpdate = [];
+        let elementIDs = data.map(e => e.id);
+        let foundElements = await elementController.find(user, organization, project, branch, elementIDs);
 
+        data.forEach(element => {
             // Delete all imported properties that cannot be changed
-            delete data[i].branch;
-            delete data[i].org;
-            delete data[i].project;
-            delete data[i].createdOn;
-            delete data[i].createdBy;
-            delete data[i].updatedOn;
-            delete data[i].lastModifiedBy;
-            delete data[i].contains;
-            delete data[i].sourceOf;
-            delete data[i].targetOf;
+            delete element.branch;
+            delete element.org;
+            delete element.project;
+            delete element.createdOn;
+            delete element.createdBy;
+            delete element.updatedOn;
+            delete element.lastModifiedBy;
+            delete element.contains;
+            delete element.sourceOf;
+            delete element.targetOf;
 
-            if (data[i].id === 'model' || data[i].id === '__mbee__' || data[i].id === 'undefined' || data[i].id === 'holding_bin') {
-                let nameSpacedElementID = `${organization}:${project}:${branch}:${data[i].id}`;
-                let element = await elementController.search(user, organization, project, branch, nameSpacedElementID).catch((err) => logger.error(err));
-
-                if (data[i].id === 'holding_bin') {
-                    element = await elementController.search(user, organization, project, branch, 'holding bin').catch((err) => logger.error(err));
-                }
-
-                let changed = isEquivalent(data[i], element[0]);
-
-                if (data[i].id === 'model') {
-                    // Cannot change parent
-                    delete data[i].parent;
-                }
-                
+            let nameSpacedElementID = utils.createID(`${organization}:${project}:${branch}:${element.id}`);
+            let foundElem = foundElements.find(e => e._id === nameSpacedElementID);
+            if (foundElem) {
+                let changed = isEquivalent(element, foundElem);
                 if (changed.hasChanged) {
-                    logger.info('Updating '+nameSpacedElementID);
-                    await elementController.update(user, organization, project, branch, data[i]).catch((err) => logger.error(err));
+                    M.log.info('Updating '+nameSpacedElementID);
+                    if (changed.properties.includes('parent')) {
+                        // Update one at a time
+                        elementsToIndividuallyUpdate.push(elementController.update(user, organization, project, branch, element));
+                    }
+                    else {
+                        delete element.parent;
+                        elementsToUpdate.push(element);
+                    }
                 }
             }
             else {
-                // Checking to see if the element exists
-                // If not, create a new element
-                let found = await elementController.find(user, organization, project, branch, data[i].id).catch((err) => logger.error(err));
-                if (found.length !== 0) {
-                    let nameSpacedElementID = `${organization}:${project}:${branch}:${data[i].id}`;
-                    logger.info('Updating '+nameSpacedElementID);
-                    await elementController.update(user, organization, project, branch, data[i]).catch((err) => logger.error(err));;
-                }
-                else {
-                    // Creating new element
-                    logger.info('Creating new element');
-                    await elementController.create(user, organization, project, branch, data[i]).catch((err) => logger.error(err));
-                }
+                M.log.info('Creating new element');
+                elementsToCreate.push(element);
             }
+        });
+
+        if (elementsToIndividuallyUpdate.length > 0) {
+            await Promise.all(elementsToIndividuallyUpdate);
+        }
+        if (elementsToUpdate.length > 0) {
+            await elementController.update(user, organization, project, branch, elementsToUpdate);
+        }
+        if (elementsToCreate.length > 0) {
+            await elementController.create(user, organization, project, branch, elementsToCreate);
         }
 
-        logger.info('Import Complete');
-        return await exportModel(user, organization, project, branch).catch((err) => logger.error(err));
+        M.log.info('Import Complete');
+        // Ecporting the data and returning it
+        return await exportModel(user, organization, project, branch).catch((err) => M.log.error(err));
     }
     catch (error) {
         throw errors.captureError(error);
@@ -93,7 +109,7 @@ async function importModel(user, data, organization, project, branch) {
  */
 async function exportModel(user, organization, project, branch) {
     try {
-        let elements = await elementController.find(user, organization, project, branch).catch((err) => logger.error(err));
+        let elements = await elementController.find(user, organization, project, branch).catch((err) => M.log.error(err));
         let updatedModel = removeReferences(elements);
         return updatedModel;
     }
@@ -117,7 +133,7 @@ function removeReferences(elements) {
         parsedElements.push(parsedElement);
     }
 
-    logger.info('organization, project, and branch references REMOVED!');
+    M.log.info('organization, project, and branch references REMOVED!');
     return parsedElements;
 }
 
