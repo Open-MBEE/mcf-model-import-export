@@ -1,0 +1,57 @@
+<h3 class="section-header">Export</h3>
+
+<select id="organizations-export">
+    <option>Select Organization</option>
+    <% orgs.forEach(function(org){ %>
+    <option value="<%= org._id %>"><%= org._id %></option>
+    <% }) %>
+</select>
+
+<select id="projects-export" disabled>
+    <option>Select Project</option>
+</select>
+
+<select id="branches-export" disabled>
+    <option>Select Branch</option>
+</select>
+
+<script id="template-project-select-export" type="text/template">
+    <option value="{{project}}">{{project}}</option>
+</script>
+
+<script id="template-branch-select-export" type="text/template">
+    <option value="{{branch}}">{{branch}}</option>
+</script>
+
+<button id="exportBtn" disabled>Export</button>
+
+<h3 class="section-header">Import</h3>
+
+<input type="file" id="selectFiles" value="Import" /><br />
+
+<select id="organizations-import" disabled>
+    <option>Select Organization</option>
+    <% orgs.forEach(function(org){ %>
+    <option value="<%= org._id %>"><%= org._id %></option>
+    <% }) %>
+</select>
+
+<select id="projects-import" disabled>
+    <option>Select Project</option>
+</select>
+
+<select id="branches-import" disabled>
+    <option>Select Branch</option>
+</select>
+
+<script id="template-project-select-import" type="text/template">
+    <option value="{{project}}">{{project}}</option>
+</script>
+
+<script id="template-branch-select-import" type="text/template">
+    <option value="{{branch}}">{{branch}}</option>
+</script>
+
+<button id="importBtn" disabled>Import</button>
+
+<script src="index.js"></script>
