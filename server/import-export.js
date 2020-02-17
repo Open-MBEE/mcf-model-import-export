@@ -110,7 +110,7 @@ async function importModel(user, data, organization, project, branch) {
 async function exportModel(user, organization, project, branch) {
     try {
         let elements = await elementController.find(user, organization, project, branch).catch((err) => M.log.error(err));
-        let updatedModel = removeReferences(elements);
+        let updatedModel = removeReferences(user, elements);
         return updatedModel;
     }
     catch (error) {
@@ -124,12 +124,12 @@ async function exportModel(user, organization, project, branch) {
  * @param {Array} elements array of elements
  * @returns {Promise<Array>} Array of objects
  */
-function removeReferences(elements) {
+function removeReferences(user, elements) {
     let parsedElements = [];
 
     // Looping through each element and getting the public data
     for (let i = 0; i < elements.length; i++) {
-        let parsedElement = getPublicData.getPublicData(elements[i], 'element');
+        let parsedElement = getPublicData.getPublicData(user, elements[i], 'element');
         parsedElements.push(parsedElement);
     }
 
