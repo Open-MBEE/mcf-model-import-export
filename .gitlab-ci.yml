@@ -1,0 +1,60 @@
+stages:
+  - sonar-qube-scan
+
+sast-scan:
+  image: registry.us.lmco.com/lmco-security/static-code-scanner:latest
+  before_script:
+  - export no_proxy=".lmco.com, 127.0.0.1,localhost"
+  - echo $http_proxy
+  - echo $https_proxy
+  - echo $HTTP_PROXY
+  - echo $HTTPS_PROXY
+  - echo $no_proxy
+# Check https://gitlab.us.lmco.com/examples/security-scanning/sast-scanning/sast-scanning-genera for updates
+  stage: sonar-qube-scan
+  tags:
+    - docker
+  variables:
+    SCAN_RESULTS_REVIEWERS_NTIDS: "e309363, e315459, e359510, mccardd, e347508, twalters" # Comma separated list of NtIds of employees who need to review scan results.
+    BUSINESS_AREA: "EO" # Valid Values Aero, EO, MFC, RMS, Space
+    ###########################################################################
+    # By default SAST scan starts at the root of your GitLab project.
+    # To target scan root at a lower level folder provide the path to the
+    # subfolder eg. folderA/folderB
+    ###########################################################################
+    ADDITIONAL_PATH: ""
+    ###########################################################################
+    # COMMON_ID is used to correlate scan related metrics across
+    # disparate tools, e.g. SAST, SCA, DAST, IAST, RASP etc.
+    ###########################################################################
+    COMMON_ID: "201800381" # Provide project CommonId in the form 123456789
+    ###########################################################################
+    # Optional but recommended
+    # ENFORCE_RELEASE_GATE comma separated list of release gates to enforce.
+    #   When a release gate is enforced, if the related scan metrics indicate a
+    #   failure, the build stage will be terminated.
+    #
+    #   Valid values: "all,security,codecoverage,duplicatelinedensity,maintainability,reliability"
+    #     If `all` is in the list all release gates will be enforced
+    ###########################################################################
+    ENFORCE_RELEASE_GATE: "security"
+    ###########################################################################
+    # Optional
+    # Note: BASELINE_VERSION only applies to Fortify!
+    # When creating a new Fortify project, audited and remediated issues will be inherited
+    # from the main branch project, which is master by default.
+    # Set BASELINE_VERSION to the main branch name if your main branch is not master.
+    # The main branch should be used for your audit and false positive suppressions.
+    # This will prevent subsequent scans for re-identifying false positives.
+    ###########################################################################
+    BASELINE_VERSION: "develop"
+    ###########################################################################
+    # Optional
+    # SAST_SCAN: Valid values are 'sonarqube' or 'fortify' or 'all' or 'none'.
+    # The default value is 'all', so by default both Fortify and SonarQube scans are executed.
+    ###########################################################################
+    SAST_SCAN: "sonarqube"
+  #only: # Only run this job for the master branch or tagged branches
+  #  - master
+  script:
+  - python /static-code-scan.py

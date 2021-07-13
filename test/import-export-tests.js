@@ -3,7 +3,7 @@
  *
  * @copyright Copyright (C) 2020, Lockheed Martin Corporation
  *
- * @license MIT
+ * @license Apache-2.0
  *
  * @owner Donte McDaniel
  *
